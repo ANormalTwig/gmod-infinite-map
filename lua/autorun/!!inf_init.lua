@@ -1,72 +1,59 @@
-if string.Explode("_", string.lower(game.GetMap()))[2] != "infmap" then return end	// initialize infinite map code on maps with 'infmap' as the second word
-
-AddCSLuaFile()
+if string.Explode("_", string.lower(game.GetMap()))[2] ~= "infmap" then return end	-- initialize infinite map code on maps with 'infmap' as the second word
 
 InfMap = InfMap or {}
 InfMap.chunk_size = 10000
 InfMap.source_bounds = Vector(1, 1, 1) * math.pow(2, 14)
 
-// Add required files for clients
+-- I stole this shit from another init file I wrote a month ago.
+
+local addFile
 if SERVER then
-	resource.AddWorkshop("2905327911")
+	-- I moved all the resource.AddFile() statements into lib/sv_loadresources.lua
 
-	// Load the files
-	local function loadfolder(dir)
-		local files, dirs = file.Find(dir .. "*","LUA")
-
-		// reoccur in directory
-		if dirs then
-			for _, d in ipairs(dirs) do
-				// only open lua that client or the map name (infmap lua loading during map load)
-				local low_d = string.lower(d)
-				if low_d == string.lower(game.GetMap()) then
-					loadfolder(dir .. d .. "/")
-				end
-			end
-		end
-
-		// load files
-		if files then
-			for _, f in ipairs(files) do
-				local prefix = string.lower(string.sub(f, 1, 2))
-				if prefix != "sv" then
-					AddCSLuaFile(dir .. f)
-					//print("Loaded ", f)
-				end
-			end
+	-- Server init
+	addFile = function(name, path)
+		local prefix = string.match(name, "^(...).+%.lua$")
+		if prefix == "sv_" then
+			include(path)
+		elseif prefix == "cl_" then
+			AddCSLuaFile(path)
+		else
+			AddCSLuaFile(path)
+			include(path)
 		end
 	end
-
-	loadfolder("infmap/")
+else
+	-- Client init
+	addFile = function(name, path)
+		local prefix = string.match(name, "^(...).+%.lua$")
+		if prefix == "sv_" then
+			-- Shouldn't happen
+		elseif prefix == "cl_" then
+			include(path)
+		else
+			include(path)
+		end
+	end
 end
 
-// Load the files
-local function openfolder(dir)
-	local files, dirs = file.Find(dir .. "*","LUA")
+--- Load directory recursively
+---@param directoryName string
+local function addRecursive(directoryName)
+	local files, directories = file.Find(directoryName .. "/*", "LUA")
 
-	// initialize files
 	if files then
-		for _, f in ipairs(files) do
-			local prefix = string.lower(string.sub(f, 1, 2))
-			local valid = 		   (CLIENT and prefix != "sv")
-			local valid = valid or (SERVER and prefix != "cl")
-			if valid then
-				include(dir .. f)
-				//print("Initialized ", f)
-			end
+		for _, filename in ipairs(files) do
+			addFile(filename, string.format("%s/%s", directoryName, filename))
 		end
 	end
 
-	// reoccur in directory
-	if dirs then
-		for _, d in ipairs(dirs) do
-			// only open lua that is server, client or the map name (infmap lua loading during map load)
-			local low_d = string.lower(d)
-			if low_d == string.lower(game.GetMap()) then
-				openfolder(dir .. d .. "/")
-			end
+	if directories then
+		for _, directory in ipairs(directories) do
+			addRecursive(string.format("%s/%s", directoryName, directory))
 		end
 	end
 end
 
-openfolder("infmap/")
+addRecursive("infmap_lib")
+addRecursive("infmap")
+
