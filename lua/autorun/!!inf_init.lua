@@ -8,7 +8,7 @@ InfMap.source_bounds = Vector(1, 1, 1) * math.pow(2, 14)
 
 local addFile
 if SERVER then
-	-- I moved all the resource.AddFile() statements into lib/sv_loadresources.lua
+	resource.AddWorkshop("2905327911")
 
 	-- Server init
 	addFile = function(name, path)
