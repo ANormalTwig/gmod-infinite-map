@@ -30,7 +30,7 @@ hook.Add("PropUpdateChunk", "infmap_terrain_init", function(ent, chunk, old_chun
 					InfMap.client_chunks[y][x] = nil
 				end
 				-- create chunk if it doesnt exist
-				if !IsValid(InfMap.client_chunks[y][x]) then 
+				if not IsValid(InfMap.client_chunks[y][x]) then 
 					local e = ents.CreateClientside("infmap_terrain_render")
 					e:Spawn()
 					e:SetAngles(Angle())
@@ -42,7 +42,7 @@ hook.Add("PropUpdateChunk", "infmap_terrain_init", function(ent, chunk, old_chun
 				end
 
 				local e = InfMap.client_chunks[y][x]
-				if !e.RENDER_MESH then continue end
+				if not e.RENDER_MESH then continue end
 				e.RENDER_MESH.Matrix:SetTranslation((e.CHUNK_OFFSET * InfMap.megachunk_size * 2 - chunk) * chunk_scale)
 			end
 		end
@@ -59,10 +59,10 @@ hook.Add("RenderScene", "infmap_update_renderbounds", function(eyePos)
 	if invalid and switch then return end
 	switch = false
 	for y = -InfMap.render_distance, InfMap.render_distance do
-		if !InfMap.client_chunks[y] then continue end
+		if not InfMap.client_chunks[y] then continue end
 		for x = -InfMap.render_distance, InfMap.render_distance do
 			local chunk = InfMap.client_chunks[y][x]
-			if !IsValid(chunk) or !chunk.RENDER_MESH then continue end
+			if not IsValid(chunk) or not chunk.RENDER_MESH then continue end
 
 			-- update render bounds when visible
 			chunk:SetLocalRenderBounds(eyePos, chunksize)

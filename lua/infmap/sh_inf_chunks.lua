@@ -6,11 +6,11 @@
 
 hook.AddLast("ShouldCollide", "infinite_shouldcollide", function(ent1, ent2)
 	if ent1 == game.GetWorld() or ent2 == game.GetWorld() then return end
-	if ent1.CHUNK_OFFSET != ent2.CHUNK_OFFSET then return false end
+	if ent1.CHUNK_OFFSET ~= ent2.CHUNK_OFFSET then return false end
 end)
 
 hook.AddLast("PhysgunPickup", "infinite_chunkclone_pickup", function(ply, ent)
-    if InfMap.disable_pickup[ent:GetClass()] then 
-        return false 
-    end
+	if InfMap.disable_pickup[ent:GetClass()] then 
+		return false 
+	end
 end)

@@ -18,9 +18,9 @@ local function update_ents(all)
 	for i = #InfMap.all_ents, 1, -1 do	-- iterate downward
 		-- if invalid is true, then the entity should be removed from the table calculated per frame
 		local ent = InfMap.all_ents[i]
-		local invalid = !ent.CHUNK_OFFSET or !lpco
+		local invalid = not ent.CHUNK_OFFSET or not lpco
 		invalid = invalid or InfMap.filter_entities(ent)
-		invalid = invalid or (!ent.RenderOverride or ent.RenderOverride == empty_function)
+		invalid = invalid or (not ent.RenderOverride or ent.RenderOverride == empty_function)
 		invalid = invalid or ent:GetNoDraw()
 		invalid = invalid or (ent.CHUNK_OFFSET - lpco):LengthSqr() > too_far
 		invalid = invalid or (ent:GetPos() - EyePos()):Dot(EyeAngles():Forward()) < 0	-- behind player
@@ -42,11 +42,11 @@ hook.AddFirst("RenderScene", "infinite_update_visbounds", function(eyePos, eyeAn
 	--eyePos = LocalPlayer():GetShootPos()
 	local sub_size = (InfMap.source_bounds[1] - InfMap.chunk_size) * 0.5	-- how far out render bounds can be before outside of the map
 	local lp_chunk_offset = LocalPlayer().CHUNK_OFFSET
-	if !lp_chunk_offset then return end
+	if not lp_chunk_offset then return end
 	for _, ent in ipairs(InfMap.all_ents) do	-- I feel bad for doing this
-		if !IsValid(ent) then continue end
-		if !ent.RenderOverride then continue end
-		if !ent.CHUNK_OFFSET then continue end
+		if not IsValid(ent) then continue end
+		if not ent.RenderOverride then continue end
+		if not ent.CHUNK_OFFSET then continue end
 
 		-- when bounding box is outside of world bounds the object isn't rendered
 		-- to combat this we locally "shrink" the bounds so they are right infront of the players eyes
@@ -56,12 +56,12 @@ hook.AddFirst("RenderScene", "infinite_update_visbounds", function(eyePos, eyeAn
 
 		local prop_dir = (InfMap.unlocalize_vector(ent:InfMap_GetPos(), world_chunk_offset) - eyePos)
 
-		--local shrunk = !far_lod and 0.02 or sub_size / prop_dir:Length()
+		--local shrunk = not far_lod and 0.02 or sub_size / prop_dir:Length()
 		local shrunk = sub_size / prop_dir:Length()	-- how much you locally shrink render bounds [in reality should be chunksize / prop_dir:Length()]
 		prop_dir = prop_dir * shrunk
 
 		-- grab render bounds in case its been edited (prop resizer compatability)
-		if !ent.RENDER_BOUNDS then 
+		if not ent.RENDER_BOUNDS then 
 			local min, max = ent:GetRenderBounds() 
 			ent.RENDER_BOUNDS = {min, max}
 		end
@@ -99,7 +99,7 @@ local blue = Color(0, 0, 255, 255)
 
 -- players just.. dont want to render? force rendering..
 hook.Add("PostDrawOpaqueRenderables", "infinite_player_render", function()
-	if !LocalPlayer().CHUNK_OFFSET then return end
+	if not LocalPlayer().CHUNK_OFFSET then return end
 	local chunk_offset = LocalPlayer().CHUNK_OFFSET
 	for k, v in ipairs(player.GetAll()) do
 		if v.CHUNK_OFFSET ~= chunk_offset and v:Alive() then
@@ -108,7 +108,7 @@ hook.Add("PostDrawOpaqueRenderables", "infinite_player_render", function()
 	end
 
 	-- debug lines
-	if !debug_enabled:GetBool() then return end
+	if not debug_enabled:GetBool() then return end
 
 	local cs = Vector(1, 1, 1) * InfMap.chunk_size
 	local co =  chunk_offset * InfMap.chunk_size * 2
@@ -128,16 +128,16 @@ function InfMap.prop_update_chunk(ent, chunk)
 
 	-- addons may error when calling this
 	local err, str = pcall(function() hook.Run("PropUpdateChunk", ent, chunk, prev_chunk) end)
-	if !err then ErrorNoHalt(str) end
+	if not err then ErrorNoHalt(str) end
 
 	-- loop through all ents, offset them relative to player since player has moved
 	if ent == LocalPlayer() then 
 		for k, v in ipairs(ents.GetAll()) do 
 			local min_bound, max_bound = v:GetModelRenderBounds()
-			if !min_bound or !max_bound then continue end
+			if not min_bound or not max_bound then continue end
 			if v == ent or InfMap.filter_entities(v) then continue end
 			--v.CHUNK_OFFSET = v.CHUNK_OFFSET or prev_chunk	-- corpse support
-			if !v.CHUNK_OFFSET then continue end
+			if not v.CHUNK_OFFSET then continue end
 
 			InfMap.prop_update_chunk(v, v.CHUNK_OFFSET)
 		end
@@ -152,7 +152,7 @@ function InfMap.prop_update_chunk(ent, chunk)
 
 	-- when first spawning in props will attempt to render offset before client has initialized
 	-- after prop chunks have been networked to client we initalize them and therefore update all prop rendering
-	if !IsValid(LocalPlayer()) or InfMap.filter_entities(ent) then return end
+	if not IsValid(LocalPlayer()) or InfMap.filter_entities(ent) then return end
 
 	-- offset single prop relative to player, only the prop has moved
 	local chunk_offset = chunk - LocalPlayer().CHUNK_OFFSET
@@ -201,7 +201,7 @@ function InfMap.prop_update_chunk(ent, chunk)
 	-- lod test
 	local len = chunk_offset:LengthSqr()
 	local is_player = ent:IsPlayer()
-	if len > 100 and !is_player then	-- make players have no lod so u can see your friends far away :)
+	if len > 100 and not is_player then	-- make players have no lod so u can see your friends far away :)
 		-- object is so small and so far away why even bother rendering it
 		if ent:BoundingRadius() < 10 or ent:IsWeapon() or len > too_far then -- too small or too far, dont bother rendering
 			ent.RenderOverride = empty_function
@@ -226,7 +226,7 @@ function InfMap.prop_update_chunk(ent, chunk)
 		local cam_Start3D = cam.Start3D
 		local cam_End3D = cam.End3D
 		local eyePos = EyePos
-		if !ent.ValidRenderOverride then
+		if not ent.ValidRenderOverride then
 			ent.RenderOverride = function(self)	-- low lod
 				cam_Start3D(eyePos() - visual_offset)
 				self:DrawModel()
