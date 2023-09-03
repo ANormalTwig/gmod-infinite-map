@@ -151,7 +151,7 @@ local function modify_trace_data(orig_data, trace_func, extra)
 		if InfMap.disable_pickup[hit_ent:GetClass()] then
 			hit_data.Entity = game.GetWorld()
 			hit_data.HitWorld = true
-			hit_data.NonHitWorld = false -- what the fuck garry?
+			hit_data.HitNonWorld = false
 		end
 	end
 	return hit_data
